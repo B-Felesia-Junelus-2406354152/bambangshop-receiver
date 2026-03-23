@@ -85,5 +85,14 @@ This is the place for you to write reflections:
 ### Mandatory (Subscriber) Reflections
 
 #### Reflection Subscriber-1
+**1. In this tutorial, we used RwLock<> to synchronise the use of Vec of Notifications. Explain why it is necessary for this case, and explain why we do not use Mutex<> instead?**  
+Kita menggunakan RwLock (Read-Write Lock) karena performanya jauh lebih optimal untuk kasus notifikasi ini dibandingkan Mutex. RwLock mengizinkan banyak thread untuk membaca data secara bersamaan (multiple concurrent readers), dan baru akan melakukan lock penuh (memblokir thread lain) hanya ketika ada thread yang ingin menulis atau menambahkan notifikasi baru (exclusive writer).
+
+Dalam sistem notifikasi, operasi membaca (melihat riwayat notifikasi) biasanya jauh lebih sering terjadi daripada operasi menulis (membuat produk baru). Kalau kita pakai Mutex, setiap kali ada thread yang mau sekadar membaca notifikasi, semua thread lain akan diblokir total. Hal ini tentu bikin antrean proses jadi lambat dan tidak efisien.
+
+**2. In this tutorial, we used lazy_static external library to define Vec and DashMap as a “static” variable. Compared to Java where we can mutate the content of a static variable via a static function, why did not Rust allow us to do so?**  
+Berbeda dengan Java, filosofi utama Rust adalah garansi memory safety dan pencegahan race condition saat compile-time. Mengubah variabel statis global dari banyak thread secara bersamaan adalah sumber utama data race. Makanya, di Rust, memutasi variabel static secara langsung itu dianggap unsafe dan dilarang keras secara bawaan.
+
+Selain itu, variabel statis di Rust mengharuskan nilainya sudah diketahui saat proses kompilasi (compile-time). Padahal, struktur data dinamis seperti Vec atau DashMap membutuhkan alokasi memori di heap yang baru terjadi saat program berjalan (runtime). Oleh karena itu, kita butuh library eksternal lazy_static. Library ini menunda inisialisasi variabel statis tersebut sampai ia pertama kali dipanggil saat runtime, dan dibungkus dengan pengaman (seperti RwLock atau pengaman internal DashMap) agar isinya bisa dimodifikasi secara aman di lingkungan multi-threading.
 
 #### Reflection Subscriber-2
